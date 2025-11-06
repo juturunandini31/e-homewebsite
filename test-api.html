@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - E-Home Cleaning Services</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>API Test Page</h1>
+    <p>This page tests if the API is working correctly for persistent storage.</p>
+
+    <div class="test-section">
+        <h2>Blog API Test</h2>
+        <button onclick="testBlogAPI()">Test Blog API</button>
+        <button onclick="addTestBlog()">Add Test Blog</button>
+        <button onclick="clearAllBlogs()">Clear All Blogs</button>
+        <div id="blogResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Gallery API Test</h2>
+        <button onclick="testGalleryAPI()">Test Gallery API</button>
+        <button onclick="addTestGallery()">Add Test Gallery Item</button>
+        <button onclick="clearAllGallery()">Clear All Gallery</button>
+        <div id="galleryResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Current Data</h2>
+        <button onclick="showCurrentData()">Refresh Data</button>
+        <div id="currentData"></div>
+    </div>
+
+    <script>
+        async function testBlogAPI() {
+            const resultDiv = document.getElementById('blogResult');
+            try {
+                const response = await fetch('api/blogs.php');
+                const data = await response.json();
+                
+                resultDiv.className = 'test-section success';
+                resultDiv.innerHTML = `
+                    <h3>✅ Blog API Working!</h3>
+                    <p>Status: ${response.status}</p>
+                    <p>Found ${data.length} blog posts</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.className = 'test-section error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Blog API Error</h3>
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        async function testGalleryAPI() {
+            const resultDiv = document.getElementById('galleryResult');
+            try {
+                const response = await fetch('api/gallery.php');
+                const data = await response.json();
+                
+                resultDiv.className = 'test-section success';
+                resultDiv.innerHTML = `
+                    <h3>✅ Gallery API Working!</h3>
+                    <p>Status: ${response.status}</p>
+                    <p>Found ${data.length} gallery items</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.className = 'test-section error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Gallery API Error</h3>
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        async function addTestBlog() {
+            try {
+                const response = await fetch('api/blogs.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title: 'Test Blog Post - ' + new Date().toLocaleString(),
+                        content: 'This is a test blog post created via API to verify persistent storage is working correctly.',
+                        imageData: 'assets/img/blog/1.webp'
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Test blog added successfully!');
+                    testBlogAPI();
+                } else {
+                    alert('Error adding test blog');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function addTestGallery() {
+            try {
+                const response = await fetch('api/gallery.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        caption: 'Test Gallery Item - ' + new Date().toLocaleString(),
+                        imageData: 'assets/img/recent-work/1.jpg',
+                        category: 'Test Category'
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Test gallery item added successfully!');
+                    testGalleryAPI();
+                } else {
+                    alert('Error adding test gallery item');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function clearAllBlogs() {
+            if (!confirm('Are you sure you want to delete ALL blog posts?')) return;
+            
+            try {
+                const response = await fetch('api/blogs.php');
+                const blogs = await response.json();
+                
+                for (const blog of blogs) {
+                    await fetch(`api/blogs.php?id=${blog.id}`, { method: 'DELETE' });
+                }
+                
+                alert('All blogs cleared!');
+                testBlogAPI();
+            } catch (error) {
+                alert('Error clearing blogs: ' + error.message);
+            }
+        }
+
+        async function clearAllGallery() {
+            if (!confirm('Are you sure you want to delete ALL gallery items?')) return;
+            
+            try {
+                const response = await fetch('api/gallery.php');
+                const items = await response.json();
+                
+                for (const item of items) {
+                    await fetch(`api/gallery.php?id=${item.id}`, { method: 'DELETE' });
+                }
+                
+                alert('All gallery items cleared!');
+                testGalleryAPI();
+            } catch (error) {
+                alert('Error clearing gallery: ' + error.message);
+            }
+        }
+
+        async function showCurrentData() {
+            const dataDiv = document.getElementById('currentData');
+            try {
+                const [blogResponse, galleryResponse] = await Promise.all([
+                    fetch('api/blogs.php'),
+                    fetch('api/gallery.php')
+                ]);
+                
+                const blogs = await blogResponse.json();
+                const gallery = await galleryResponse.json();
+                
+                dataDiv.innerHTML = `
+                    <h3>Current Data Summary</h3>
+                    <p><strong>Blog Posts:</strong> ${blogs.length}</p>
+                    <p><strong>Gallery Items:</strong> ${gallery.length}</p>
+                    <p><strong>Last Updated:</strong> ${new Date().toLocaleString()}</p>
+                    
+                    <h4>Recent Blog Posts:</h4>
+                    <ul>
+                        ${blogs.slice(0, 3).map(blog => `<li>${blog.title} (${blog.date})</li>`).join('')}
+                        ${blogs.length === 0 ? '<li>No blog posts found</li>' : ''}
+                    </ul>
+                    
+                    <h4>Recent Gallery Items:</h4>
+                    <ul>
+                        ${gallery.slice(0, 3).map(item => `<li>${item.caption} (${item.date})</li>`).join('')}
+                        ${gallery.length === 0 ? '<li>No gallery items found</li>' : ''}
+                    </ul>
+                `;
+            } catch (error) {
+                dataDiv.innerHTML = `<p class="error">Error loading data: ${error.message}</p>`;
+            }
+        }
+
+        // Auto-load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            showCurrentData();
+        });
+    </script>
+</body>
+</html>

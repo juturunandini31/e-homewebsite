@@ -290,44 +290,83 @@
   </div>
 
   <script>
-    function getBlogPosts() {
-      const posts = localStorage.getItem('blogPosts');
-      return posts ? JSON.parse(posts) : [];
+    async function getBlogPosts() {
+      try {
+        const response = await fetch('../api/blogs.php');
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching blog posts:', error);
+        // Fallback to localStorage
+        const posts = localStorage.getItem('blogPosts');
+        return posts ? JSON.parse(posts) : [];
+      }
     }
 
-    function saveBlogPost(title, content, imageData = '', id = null) {
-      const posts = getBlogPosts();
-      let newPost;
-      if (id) {
-        const postIndex = posts.findIndex(post => post.id === id);
-        if (postIndex !== -1) {
-          posts[postIndex] = {
-            ...posts[postIndex],
+    async function saveBlogPost(title, content, imageData = '', id = null) {
+      try {
+        const method = id ? 'PUT' : 'POST';
+        const data = { title, content, imageData };
+        if (id) data.id = id;
+        
+        const response = await fetch('../api/blogs.php', {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to save blog post');
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Error saving blog post:', error);
+        // Fallback to localStorage
+        const posts = JSON.parse(localStorage.getItem('blogPosts') || '[]');
+        let newPost;
+        
+        if (id) {
+          const postIndex = posts.findIndex(post => post.id === id);
+          if (postIndex !== -1) {
+            posts[postIndex] = { ...posts[postIndex], title, content, imageData };
+            newPost = posts[postIndex];
+          }
+        } else {
+          newPost = {
+            id: Date.now(),
             title,
             content,
-            imageData: imageData || posts[postIndex].imageData,
-            date: posts[postIndex].date
+            imageData,
+            date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
           };
-          newPost = posts[postIndex];
+          posts.unshift(newPost);
         }
-      } else {
-        newPost = {
-          id: Date.now(),
-          title,
-          content,
-          imageData,
-          date: new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})
-        };
-        posts.unshift(newPost);
+        
+        localStorage.setItem('blogPosts', JSON.stringify(posts));
+        return newPost;
       }
-      localStorage.setItem('blogPosts', JSON.stringify(posts));
-      return newPost;
     }
 
-    function deleteBlogPost(id) {
-      const posts = getBlogPosts();
-      const updatedPosts = posts.filter(post => post.id !== id);
-      localStorage.setItem('blogPosts', JSON.stringify(updatedPosts));
+    async function deleteBlogPost(id) {
+      try {
+        const response = await fetch(`../api/blogs.php?id=${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to delete blog post');
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Error deleting blog post:', error);
+        // Fallback to localStorage
+        const posts = JSON.parse(localStorage.getItem('blogPosts') || '[]');
+        const updatedPosts = posts.filter(post => post.id !== id);
+        localStorage.setItem('blogPosts', JSON.stringify(updatedPosts));
+      }
     }
 
     const form = document.getElementById('postForm');
@@ -440,14 +479,20 @@
       imageInput.value = '';
     }
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', async function(e) {
       e.preventDefault();
       const title = document.getElementById('postTitle').value.trim();
       const content = document.getElementById('postContent').value.trim();
       if (!title || !content) return;
-      saveBlogPost(title, content, selectedImageData, editingPostId);
-      resetForm();
-      renderPosts();
+      
+      try {
+        await saveBlogPost(title, content, selectedImageData, editingPostId);
+        resetForm();
+        await renderPosts();
+        alert('Blog post saved successfully!');
+      } catch (error) {
+        alert('Error saving blog post. Please try again.');
+      }
     });
 
     function editPost(id) {
@@ -486,10 +531,10 @@
       cancelEditButton.style.display = 'none';
     }
 
-    function renderPosts() {
-      const posts = getBlogPosts();
+    async function renderPosts() {
+      const posts = await getBlogPosts();
       postsEl.innerHTML = '';
-      if (posts.length === 0) {
+      if (!posts || posts.length === 0) {
         postsEl.innerHTML = '<p>No posts yet.</p>';
         return;
       }
@@ -511,11 +556,16 @@
         postsEl.appendChild(node);
       });
       postsEl.querySelectorAll('button.btn-danger[data-id]').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
           const id = Number(btn.getAttribute('data-id'));
           if (confirm('Delete this post?')) {
-            deleteBlogPost(id);
-            renderPosts();
+            try {
+              await deleteBlogPost(id);
+              await renderPosts();
+              alert('Blog post deleted successfully!');
+            } catch (error) {
+              alert('Error deleting blog post. Please try again.');
+            }
           }
         });
       });
@@ -532,9 +582,9 @@
       window.location.href = 'login.html';
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
       requireAuth();
-      renderPosts();
+      await renderPosts();
     });
   </script>
 </body>
