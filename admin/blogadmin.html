@@ -168,6 +168,7 @@
       text-align: center;
       margin-bottom: 16px;
       transition: border-color 0.3s;
+      position: relative;
     }
     
     .image-upload-container:hover {
@@ -245,6 +246,7 @@
       <h2>Blog Admin</h2>
       <div>
         <a class="btn btn-light" href="../blog.html">View Blog</a>
+        <a class="btn btn-light" href="gallery.html">Gallery Admin</a>
         <button class="btn btn-light" onclick="logout()">Logout</button>
       </div>
     </div>
@@ -261,11 +263,12 @@
           <div class="upload-icon">📁</div>
           <p class="upload-text">Drag & drop an image here or click to browse</p>
           <input type="file" id="imageInput" class="file-input" accept="image/*">
-          <button type="button" class="btn btn-secondary" onclick="document.getElementById('imageInput').click()">Select Image</button>
+          <!-- removed onclick from the button to prevent double trigger -->
+          <button type="button" class="btn btn-secondary" id="selectImageBtn">Select Image</button>
         </div>
         <img id="imagePreview" class="image-preview" alt="Image preview">
         <div class="image-actions">
-          <button type="button" class="btn btn-secondary" id="changeImageBtn" style="display:none" onclick="document.getElementById('imageInput').click()">Change Image</button>
+          <button type="button" class="btn btn-secondary" id="changeImageBtn" style="display:none">Change Image</button>
           <button type="button" class="btn btn-danger" id="removeImageBtn" style="display:none" onclick="removeImage()">Remove Image</button>
         </div>
         <div id="imageLoading" class="loading">Processing image...</div>
@@ -287,7 +290,6 @@
   </div>
 
   <script>
-    // Blog data management functions
     function getBlogPosts() {
       const posts = localStorage.getItem('blogPosts');
       return posts ? JSON.parse(posts) : [];
@@ -296,9 +298,7 @@
     function saveBlogPost(title, content, imageData = '', id = null) {
       const posts = getBlogPosts();
       let newPost;
-      
       if (id) {
-        // Editing existing post
         const postIndex = posts.findIndex(post => post.id === id);
         if (postIndex !== -1) {
           posts[postIndex] = {
@@ -306,26 +306,20 @@
             title,
             content,
             imageData: imageData || posts[postIndex].imageData,
-            date: posts[postIndex].date // Keep original date
+            date: posts[postIndex].date
           };
           newPost = posts[postIndex];
         }
       } else {
-        // Creating new post
         newPost = {
           id: Date.now(),
           title,
           content,
           imageData,
-          date: new Date().toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })
+          date: new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})
         };
         posts.unshift(newPost);
       }
-      
       localStorage.setItem('blogPosts', JSON.stringify(posts));
       return newPost;
     }
@@ -336,12 +330,12 @@
       localStorage.setItem('blogPosts', JSON.stringify(updatedPosts));
     }
 
-    // Admin page functionality
     const form = document.getElementById('postForm');
     const postsEl = document.getElementById('posts');
     const imageInput = document.getElementById('imageInput');
     const imagePreview = document.getElementById('imagePreview');
     const uploadContainer = document.getElementById('uploadContainer');
+    const selectImageBtn = document.getElementById('selectImageBtn');
     const changeImageBtn = document.getElementById('changeImageBtn');
     const removeImageBtn = document.getElementById('removeImageBtn');
     const imageLoading = document.getElementById('imageLoading');
@@ -351,15 +345,29 @@
     let selectedImageData = '';
     let editingPostId = null;
 
-    // Handle file selection
-    imageInput.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        processImage(file);
-      }
+    // ✅ FIXED IMAGE PICKER SECTION
+    // Only trigger file input from one source at a time
+    selectImageBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      imageInput.click();
     });
 
-    // Drag and drop functionality
+    changeImageBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      imageInput.click();
+    });
+
+    uploadContainer.addEventListener('click', (e) => {
+      // prevent triggering twice if click happens on button inside
+      if (e.target.id === 'selectImageBtn' || e.target.id === 'changeImageBtn') return;
+      imageInput.click();
+    });
+
+    imageInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) processImage(file);
+    });
+
     uploadContainer.addEventListener('dragover', function(e) {
       e.preventDefault();
       uploadContainer.classList.add('dragover');
@@ -372,7 +380,6 @@
     uploadContainer.addEventListener('drop', function(e) {
       e.preventDefault();
       uploadContainer.classList.remove('dragover');
-      
       const file = e.dataTransfer.files[0];
       if (file && file.type.startsWith('image/')) {
         processImage(file);
@@ -381,39 +388,22 @@
       }
     });
 
-    // Click to select file
-    uploadContainer.addEventListener('click', function() {
-      imageInput.click();
-    });
-
-    // Process the selected image
     function processImage(file) {
       if (!file.type.match('image.*')) {
         alert('Please select a valid image file.');
         return;
       }
-      
-      // Show loading indicator
       imageLoading.style.display = 'block';
-      
       const reader = new FileReader();
-      
       reader.onload = function(e) {
-        // Create an image to check dimensions and compress if needed
         const img = new Image();
         img.onload = function() {
-          // Create a canvas to resize the image if needed
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
-          
-          // Set maximum dimensions
           const maxWidth = 800;
           const maxHeight = 600;
-          
           let width = img.width;
           let height = img.height;
-          
-          // Calculate new dimensions while maintaining aspect ratio
           if (width > maxWidth || height > maxHeight) {
             if (width > height) {
               height = Math.round((height * maxWidth) / width);
@@ -423,41 +413,25 @@
               height = maxHeight;
             }
           }
-          
-          // Set canvas dimensions
           canvas.width = width;
           canvas.height = height;
-          
-          // Draw and compress image
           ctx.drawImage(img, 0, 0, width, height);
-          
-          // Get the compressed image as data URL
           selectedImageData = canvas.toDataURL('image/jpeg', 0.8);
-          
-          // Update preview
           imagePreview.src = selectedImageData;
           imagePreview.style.display = 'block';
-          
-          // Show action buttons
           changeImageBtn.style.display = 'inline-block';
           removeImageBtn.style.display = 'inline-block';
-          
-          // Hide loading indicator
           imageLoading.style.display = 'none';
         };
-        
         img.src = e.target.result;
       };
-      
       reader.onerror = function() {
         alert('Error reading the image file.');
         imageLoading.style.display = 'none';
       };
-      
       reader.readAsDataURL(file);
     }
 
-    // Remove selected image
     function removeImage() {
       selectedImageData = '';
       imagePreview.style.display = 'none';
@@ -466,30 +440,22 @@
       imageInput.value = '';
     }
 
-    // Form submission
     form.addEventListener('submit', function(e) {
       e.preventDefault();
       const title = document.getElementById('postTitle').value.trim();
       const content = document.getElementById('postContent').value.trim();
-      
       if (!title || !content) return;
-      
       saveBlogPost(title, content, selectedImageData, editingPostId);
       resetForm();
       renderPosts();
     });
 
-    // Edit post function
     function editPost(id) {
       const posts = getBlogPosts();
       const post = posts.find(p => p.id === id);
-      
       if (post) {
-        // Fill form with post data
         document.getElementById('postTitle').value = post.title;
         document.getElementById('postContent').value = post.content;
-        
-        // Handle image
         if (post.imageData) {
           selectedImageData = post.imageData;
           imagePreview.src = post.imageData;
@@ -499,24 +465,18 @@
         } else {
           removeImage();
         }
-        
-        // Set editing mode
         editingPostId = id;
         submitButton.textContent = 'Update Post';
         submitButton.className = 'btn btn-warning';
         cancelEditButton.style.display = 'inline-block';
-        
-        // Scroll to form
         form.scrollIntoView({ behavior: 'smooth' });
       }
     }
 
-    // Cancel edit function
     function cancelEdit() {
       resetForm();
     }
 
-    // Reset form function
     function resetForm() {
       form.reset();
       removeImage();
@@ -529,12 +489,10 @@
     function renderPosts() {
       const posts = getBlogPosts();
       postsEl.innerHTML = '';
-      
       if (posts.length === 0) {
         postsEl.innerHTML = '<p>No posts yet.</p>';
         return;
       }
-      
       posts.forEach(post => {
         const node = document.createElement('div');
         node.className = 'post';
@@ -552,8 +510,6 @@
         `;
         postsEl.appendChild(node);
       });
-      
-      // Attach delete handlers
       postsEl.querySelectorAll('button.btn-danger[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
           const id = Number(btn.getAttribute('data-id'));
@@ -569,19 +525,13 @@
       return (s+'').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    // Mock authentication functions
-    function requireAuth() {
-      // In a real app, this would check if user is authenticated
-      console.log('Authentication check passed');
-    }
+    function requireAuth() { console.log('Authentication check passed'); }
 
     function logout() {
-      // In a real app, this would clear authentication tokens
       alert('Logged out successfully');
       window.location.href = 'login.html';
     }
 
-    // Initialize the page
     document.addEventListener('DOMContentLoaded', function() {
       requireAuth();
       renderPosts();

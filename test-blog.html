@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Test</title>
+</head>
+<body>
+    <h1>Blog System Test</h1>
+    
+    <h2>Add Test Blog Post</h2>
+    <button onclick="addTestPost()">Add Test Blog Post</button>
+    <button onclick="clearAllPosts()">Clear All Posts</button>
+    
+    <h2>Current Blog Posts in localStorage:</h2>
+    <div id="blogList"></div>
+    
+    <hr>
+    
+    <h2>Gallery System Test</h2>
+    <button onclick="addTestGalleryItem()">Add Test Gallery Item</button>
+    <button onclick="clearAllGalleryItems()">Clear All Gallery Items</button>
+    
+    <h2>Current Gallery Items in localStorage:</h2>
+    <div id="galleryList"></div>
+    
+    <script>
+        function addTestPost() {
+            const posts = JSON.parse(localStorage.getItem('blogPosts') || '[]');
+            const newPost = {
+                id: Date.now(),
+                title: 'Test Blog Post from Admin',
+                content: 'This is a test blog post created to verify the dynamic loading system works correctly. It should appear on both the home page and blog page.',
+                imageData: 'assets/img/blog/1.webp',
+                date: new Date().toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                })
+            };
+            
+            posts.unshift(newPost);
+            localStorage.setItem('blogPosts', JSON.stringify(posts));
+            displayPosts();
+            alert('Test post added! Check the home page and blog page.');
+        }
+        
+        function clearAllPosts() {
+            localStorage.removeItem('blogPosts');
+            displayPosts();
+            alert('All posts cleared! Pages will now show default blogs.');
+        }
+        
+        function addTestGalleryItem() {
+            const items = JSON.parse(localStorage.getItem('galleryItems') || '[]');
+            const newItem = {
+                id: Date.now(),
+                caption: 'Test Gallery Item from Admin',
+                imageData: 'assets/img/recent-work/1.jpg',
+                date: new Date().toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                })
+            };
+            
+            items.unshift(newItem);
+            localStorage.setItem('galleryItems', JSON.stringify(items));
+            displayGalleryItems();
+            alert('Test gallery item added! Check the home page and gallery page.');
+        }
+        
+        function clearAllGalleryItems() {
+            localStorage.removeItem('galleryItems');
+            displayGalleryItems();
+            alert('All gallery items cleared! Pages will now show default gallery.');
+        }
+        
+        function displayPosts() {
+            const posts = JSON.parse(localStorage.getItem('blogPosts') || '[]');
+            const listEl = document.getElementById('blogList');
+            
+            if (posts.length === 0) {
+                listEl.innerHTML = '<p>No admin posts found. Default blogs will be shown.</p>';
+                return;
+            }
+            
+            let html = '<ul>';
+            posts.forEach(post => {
+                html += `<li><strong>${post.title}</strong> - ${post.date}</li>`;
+            });
+            html += '</ul>';
+            
+            listEl.innerHTML = html;
+        }
+        
+        function displayGalleryItems() {
+            const items = JSON.parse(localStorage.getItem('galleryItems') || '[]');
+            const listEl = document.getElementById('galleryList');
+            
+            if (items.length === 0) {
+                listEl.innerHTML = '<p>No admin gallery items found. Default gallery will be shown.</p>';
+                return;
+            }
+            
+            let html = '<ul>';
+            items.forEach(item => {
+                html += `<li><strong>${item.caption}</strong> - ${item.date || 'No date'}</li>`;
+            });
+            html += '</ul>';
+            
+            listEl.innerHTML = html;
+        }
+        
+        // Display content on load
+        displayPosts();
+        displayGalleryItems();
+    </script>
+</body>
+</html>
+</body>
+</html>

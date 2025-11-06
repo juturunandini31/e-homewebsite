@@ -4,51 +4,188 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin Login</title>
+
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="admin.css">
+
   <style>
-    /* small override for admin forms */
-    .admin-container{max-width:420px;margin:80px auto;background:#fff;padding:24px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
-    .admin-container h2{margin-bottom:18px}
-    .error{color:#b00020;margin-top:8px}
+    /* General Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #3498db, #2ecc71);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .admin-container {
+      width: 100%;
+      max-width: 400px;
+      background: #ffffff;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      text-align: center;
+    }
+
+    .admin-container:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .admin-container h2 {
+      color: #2c3e50;
+      margin-bottom: 24px;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group {
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #34495e;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 6px rgba(52, 152, 219, 0.3);
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.3s ease, transform 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2980b9, #1f6690);
+    }
+
+    .btn-light {
+      background: #ecf0f1;
+      color: #2c3e50;
+    }
+
+    .btn-light:hover {
+      background: #d5dbdb;
+    }
+
+    .error {
+      color: #e74c3c;
+      font-size: 14px;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .footer-text {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #7f8c8d;
+    }
+
+    .footer-text a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer-text a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .admin-container {
+        padding: 30px 20px;
+      }
+
+      .admin-container h2 {
+        font-size: 22px;
+      }
+    }
   </style>
 </head>
+
 <body>
   <div class="admin-container">
     <h2>Admin Login</h2>
     <form id="loginForm">
       <div class="form-group">
         <label for="userid">User ID</label>
-        <input id="userid" class="form-control" type="text" placeholder="admin">
+        <input id="userid" class="form-control" type="text" placeholder="Enter your user ID" required>
       </div>
+
       <div class="form-group">
         <label for="password">Password</label>
-        <input id="password" class="form-control" type="password" placeholder="admin123">
+        <input id="password" class="form-control" type="password" placeholder="Enter your password" required>
       </div>
-      <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+
+      <div style="margin-top: 16px; display: flex; justify-content: center; gap: 10px;">
         <button type="submit" class="btn btn-primary">Login</button>
         <a href="../index.html" class="btn btn-light">Home</a>
       </div>
+
       <div id="error" class="error" aria-live="polite"></div>
     </form>
-    <p style="margin-top:12px;font-size:12px;color:#666">Use user id: <strong>admin</strong> and password: <strong>admin123</strong></p>
+
+    <p class="footer-text">Only authorized users can access the dashboard.</p>
   </div>
 
   <script src="./admin.js"></script>
   <script>
-    // redirect if already logged in
+    // Redirect if already logged in
     if (sessionStorage.getItem('adminLoggedIn') === 'true') {
       location.href = 'dashboard.html';
     }
 
     const form = document.getElementById('loginForm');
     const err = document.getElementById('error');
-    form.addEventListener('submit', function(e){
+
+    form.addEventListener('submit', function(e) {
       e.preventDefault();
       const u = document.getElementById('userid').value.trim();
       const p = document.getElementById('password').value;
       const ok = login(u, p);
-      if(ok){
+
+      if (ok) {
         location.href = 'dashboard.html';
       } else {
         err.textContent = 'Invalid credentials. Please try again.';

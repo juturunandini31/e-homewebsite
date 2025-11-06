@@ -180,15 +180,6 @@
                     <div class="container">
                         <div class="service-title-text">
                             <h2>Our Gallery</h2>
-                            <ul>
-                                <li>
-                                    <a href="index.html">Home</a>
-                                </li>
-                                <li>
-                                    <i class="icofont-rounded-double-right"></i>
-                                    <a href="recent-project.html">Gallery</a>
-                                </li>
-                            </ul>
                         </div>
                     </div>
                 </div>
@@ -403,15 +394,16 @@
 
             // Function to render gallery items
             function renderGallery() {
-                const items = getGalleryItems();
+                const adminItems = getGalleryItems();
                 const container = document.getElementById('galleryContainer');
                 
-                if (items.length === 0) {
+                // If no admin items, show message
+                if (adminItems.length === 0) {
                     container.innerHTML = `
                         <div class="col-12">
                             <div class="text-center py-5">
-                                <h3>No gallery images yet</h3>
-                                <p>Check back later for updates or visit the admin panel to add images!</p>
+                                <h3>No Gallery Images Yet</h3>
+                                <p>Visit the <a href="./admin/gallery.html">admin panel</a> to add your first gallery image!</p>
                             </div>
                         </div>
                     `;
@@ -420,12 +412,13 @@
                 
                 let galleryHTML = '';
                 
-                items.forEach(item => {
+                adminItems.forEach(item => {
+                    
                     galleryHTML += `
                         <div class="col-lg-4 col-md-6">
                             <div class="recent-items">
                                 <div class="recent-img">
-                                    <img src="${item.imageData}" alt="${escapeHtml(item.caption)}" style="width: 100%; height: 250px; object-fit: cover;">
+                                    <img src="${item.imageData}" alt="${escapeHtml(item.caption)}" style="width: 100%; height: 250px; object-fit: cover;" onerror="this.src='assets/img/recent-work/1.jpg'">
 
                                     <div class="recent-hover">
                                         <div class="d-table">
@@ -439,6 +432,7 @@
                                 </div>
                                 <div class="recent-text text-center mt-3">
                                     <h4>${escapeHtml(item.caption)}</h4>
+                                    ${item.category ? `<p class="text-muted">${escapeHtml(item.category)}</p>` : ''}
                                 </div>
                             </div>
                         </div>
