@@ -884,33 +884,31 @@
             loadHomeGalleryItems();
         });
 
-        async function loadHomeBlogPosts() {
+        function loadHomeBlogPosts() {
             const blogSlider = document.getElementById('homeBlogSlider');
             
-            try {
-                // Get blog posts from API
-                const response = await fetch('api/blogs.php');
-                const adminPosts = await response.json();
-                
-                // Clear existing content
-                blogSlider.innerHTML = '';
-                
-                // If no admin posts, show message
-                if (!adminPosts || adminPosts.length === 0) {
-                    const noBlogMessage = document.createElement('div');
-                    noBlogMessage.className = 'blog-area';
-                    noBlogMessage.innerHTML = `
-                        <div class="text-center py-5">
-                            <h3>No Blog Posts Yet</h3>
-                            <p>Visit our <a href="admin/dashboard.html">admin panel</a> to create your first blog post!</p>
-                        </div>
-                    `;
-                    blogSlider.appendChild(noBlogMessage);
-                    return;
-                }
-                
-                // Take only first 5 posts for the slider
-                const postsToShow = adminPosts.slice(0, 5);
+            // Get blog posts from localStorage
+            const adminPosts = JSON.parse(localStorage.getItem('blogPosts') || '[]');
+            
+            // Clear existing content
+            blogSlider.innerHTML = '';
+            
+            // If no admin posts, show message
+            if (!adminPosts || adminPosts.length === 0) {
+                const noBlogMessage = document.createElement('div');
+                noBlogMessage.className = 'blog-area';
+                noBlogMessage.innerHTML = `
+                    <div class="text-center py-5">
+                        <h3>No Blog Posts Yet</h3>
+                        <p>Visit our <a href="admin/dashboard.html">admin panel</a> to create your first blog post!</p>
+                    </div>
+                `;
+                blogSlider.appendChild(noBlogMessage);
+                return;
+            }
+            
+            // Take only first 5 posts for the slider
+            const postsToShow = adminPosts.slice(0, 5);
             
             // Generate blog post HTML
             postsToShow.forEach(post => {
@@ -979,53 +977,33 @@
                     });
                 }
             }, 100);
-            
-            } catch (error) {
-                console.error('Error loading blog posts:', error);
-                // Fallback to localStorage if API fails
-                const localPosts = JSON.parse(localStorage.getItem('blogPosts') || '[]');
-                if (localPosts.length > 0) {
-                    loadBlogPostsFromLocal(localPosts.slice(0, 5));
-                } else {
-                    blogSlider.innerHTML = `
-                        <div class="blog-area">
-                            <div class="text-center py-5">
-                                <h3>Unable to Load Blog Posts</h3>
-                                <p>Please check your connection and try again.</p>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
         }
         
-        async function loadHomeGalleryItems() {
+        function loadHomeGalleryItems() {
             const gallerySlider = document.getElementById('homeGallerySlider');
             
-            try {
-                // Get gallery items from API
-                const response = await fetch('api/gallery.php');
-                const adminGallery = await response.json();
-                
-                // Clear existing content
-                gallerySlider.innerHTML = '';
-                
-                // If no admin gallery items, show message
-                if (!adminGallery || adminGallery.length === 0) {
-                    const noGalleryMessage = document.createElement('div');
-                    noGalleryMessage.className = 'recent-project-item';
-                    noGalleryMessage.innerHTML = `
-                        <div class="text-center py-5">
-                            <h3>No Gallery Items Yet</h3>
-                            <p>Visit our <a href="admin/gallery.html">admin panel</a> to add your first gallery image!</p>
-                        </div>
-                    `;
-                    gallerySlider.appendChild(noGalleryMessage);
-                    return;
-                }
-                
-                // Take only first 6 items for the slider
-                const itemsToShow = adminGallery.slice(0, 6);
+            // Get gallery items from localStorage
+            const adminGallery = JSON.parse(localStorage.getItem('galleryItems') || '[]');
+            
+            // Clear existing content
+            gallerySlider.innerHTML = '';
+            
+            // If no admin gallery items, show message
+            if (!adminGallery || adminGallery.length === 0) {
+                const noGalleryMessage = document.createElement('div');
+                noGalleryMessage.className = 'recent-project-item';
+                noGalleryMessage.innerHTML = `
+                    <div class="text-center py-5">
+                        <h3>No Gallery Items Yet</h3>
+                        <p>Visit our <a href="admin/gallery.html">admin panel</a> to add your first gallery image!</p>
+                    </div>
+                `;
+                gallerySlider.appendChild(noGalleryMessage);
+                return;
+            }
+            
+            // Take only first 6 items for the slider
+            const itemsToShow = adminGallery.slice(0, 6);
             
             // Generate gallery item HTML
             itemsToShow.forEach(item => {
@@ -1103,24 +1081,6 @@
                     }
                 }
             }, 100);
-            
-            } catch (error) {
-                console.error('Error loading gallery items:', error);
-                // Fallback to localStorage if API fails
-                const localGallery = JSON.parse(localStorage.getItem('galleryItems') || '[]');
-                if (localGallery.length > 0) {
-                    loadGalleryItemsFromLocal(localGallery.slice(0, 6));
-                } else {
-                    gallerySlider.innerHTML = `
-                        <div class="recent-project-item">
-                            <div class="text-center py-5">
-                                <h3>Unable to Load Gallery</h3>
-                                <p>Please check your connection and try again.</p>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
         }
 
         function escapeHtml(text) {

@@ -386,22 +386,15 @@
         <script src="assets/js/custom.js"></script>
         
         <script>
-            // Function to get gallery items from API
-            async function getGalleryItems() {
-                try {
-                    const response = await fetch('api/gallery.php');
-                    return await response.json();
-                } catch (error) {
-                    console.error('Error fetching gallery items:', error);
-                    // Fallback to localStorage
-                    const items = localStorage.getItem('galleryItems');
-                    return items ? JSON.parse(items) : [];
-                }
+            // Function to get gallery items from localStorage
+            function getGalleryItems() {
+                const items = localStorage.getItem('galleryItems');
+                return items ? JSON.parse(items) : [];
             }
 
             // Function to render gallery items
-            async function renderGallery() {
-                const adminItems = await getGalleryItems();
+            function renderGallery() {
+                const adminItems = getGalleryItems();
                 const container = document.getElementById('galleryContainer');
                 
                 // If no admin items, show message

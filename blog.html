@@ -379,22 +379,15 @@
         <script src="assets/js/custom.js"></script>
         
         <script>
-            // Function to get blog posts from API
-            async function getBlogPosts() {
-                try {
-                    const response = await fetch('api/blogs.php');
-                    return await response.json();
-                } catch (error) {
-                    console.error('Error fetching blog posts:', error);
-                    // Fallback to localStorage
-                    const posts = localStorage.getItem('blogPosts');
-                    return posts ? JSON.parse(posts) : [];
-                }
+            // Function to get blog posts from localStorage
+            function getBlogPosts() {
+                const posts = localStorage.getItem('blogPosts');
+                return posts ? JSON.parse(posts) : [];
             }
 
             // Function to render blog posts
-            async function renderBlogPosts() {
-                const adminPosts = await getBlogPosts();
+            function renderBlogPosts() {
+                const adminPosts = getBlogPosts();
                 const container = document.getElementById('blogPostsContainer');
                 
                 // If no admin posts, show message

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Test - E-Home Cleaning</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        .data { background: #f8f9fa; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Simple LocalStorage Test</h1>
+    
+    <div class="section">
+        <h2>Blog Posts</h2>
+        <button onclick="addTestBlog()">Add Test Blog</button>
+        <button onclick="showBlogs()">Show Blogs</button>
+        <button onclick="clearBlogs()">Clear All Blogs</button>
+        <div id="blogData" class="data"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Gallery Items</h2>
+        <button onclick="addTestGallery()">Add Test Gallery</button>
+        <button onclick="showGallery()">Show Gallery</button>
+        <button onclick="clearGallery()">Clear All Gallery</button>
+        <div id="galleryData" class="data"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Test Home Page Functions</h2>
+        <button onclick="testHomePage()">Test Home Page Loading</button>
+        <div id="homeTest" class="data"></div>
+    </div>
+
+    <script>
+        function addTestBlog() {
+            const blogs = JSON.parse(localStorage.getItem('blogPosts') || '[]');
+            const newBlog = {
+                id: Date.now(),
+                title: 'Test Blog ' + new Date().toLocaleTimeString(),
+                content: 'This is a test blog post to verify localStorage is working.',
+                imageData: 'assets/img/blog/1.webp',
+                date: new Date().toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                })
+            };
+            blogs.unshift(newBlog);
+            localStorage.setItem('blogPosts', JSON.stringify(blogs));
+            showBlogs();
+            alert('Test blog added!');
+        }
+        
+        function addTestGallery() {
+            const items = JSON.parse(localStorage.getItem('galleryItems') || '[]');
+            const newItem = {
+                id: Date.now(),
+                caption: 'Test Gallery ' + new Date().toLocaleTimeString(),
+                imageData: 'assets/img/recent-work/1.jpg',
+                date: new Date().toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                })
+            };
+            items.unshift(newItem);
+            localStorage.setItem('galleryItems', JSON.stringify(items));
+            showGallery();
+            alert('Test gallery item added!');
+        }
+        
+        function showBlogs() {
+            const blogs = JSON.parse(localStorage.getItem('blogPosts') || '[]');
+            document.getElementById('blogData').innerHTML = `
+                <strong>Found ${blogs.length} blog posts:</strong><br>
+                ${blogs.map(blog => `• ${blog.title} (${blog.date})`).join('<br>')}
+            `;
+        }
+        
+        function showGallery() {
+            const items = JSON.parse(localStorage.getItem('galleryItems') || '[]');
+            document.getElementById('galleryData').innerHTML = `
+                <strong>Found ${items.length} gallery items:</strong><br>
+                ${items.map(item => `• ${item.caption} (${item.date})`).join('<br>')}
+            `;
+        }
+        
+        function clearBlogs() {
+            if (confirm('Clear all blogs?')) {
+                localStorage.removeItem('blogPosts');
+                showBlogs();
+            }
+        }
+        
+        function clearGallery() {
+            if (confirm('Clear all gallery items?')) {
+                localStorage.removeItem('galleryItems');
+                showGallery();
+            }
+        }
+        
+        function testHomePage() {
+            const blogs = JSON.parse(localStorage.getItem('blogPosts') || '[]');
+            const gallery = JSON.parse(localStorage.getItem('galleryItems') || '[]');
+            
+            document.getElementById('homeTest').innerHTML = `
+                <strong>Home Page Test Results:</strong><br>
+                • Blog posts available: ${blogs.length}<br>
+                • Gallery items available: ${gallery.length}<br>
+                • LocalStorage working: ${localStorage ? 'Yes' : 'No'}<br>
+                • Browser: ${navigator.userAgent.split(' ')[0]}<br>
+                <br>
+                <strong>Instructions:</strong><br>
+                1. Add some test data above<br>
+                2. Go to <a href="index.html">Home Page</a><br>
+                3. Check if blog and gallery sections show your data<br>
+                4. If not showing, check browser console for errors
+            `;
+        }
+        
+        // Auto-load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            showBlogs();
+            showGallery();
+            testHomePage();
+        });
+    </script>
+</body>
+</html>

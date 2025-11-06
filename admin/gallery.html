@@ -305,82 +305,44 @@
 
   <script>
     // Gallery data management
-    async function getGalleryItems() {
-      try {
-        const response = await fetch('../api/gallery.php');
-        return await response.json();
-      } catch (error) {
-        console.error('Error fetching gallery items:', error);
-        // Fallback to localStorage
-        const items = localStorage.getItem('galleryItems');
-        return items ? JSON.parse(items) : [];
-      }
+    function getGalleryItems() {
+      const items = localStorage.getItem('galleryItems');
+      return items ? JSON.parse(items) : [];
     }
 
-    async function saveGalleryItem(caption, imageData, id = null) {
-      try {
-        const method = id ? 'PUT' : 'POST';
-        const data = { caption, imageData };
-        if (id) data.id = id;
-        
-        const response = await fetch('../api/gallery.php', {
-          method: method,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to save gallery item');
-        }
-        
-        return await response.json();
-      } catch (error) {
-        console.error('Error saving gallery item:', error);
-        // Fallback to localStorage
-        const items = JSON.parse(localStorage.getItem('galleryItems') || '[]');
-        let newItem;
-        
-        if (id) {
-          const itemIndex = items.findIndex(item => item.id === id);
-          if (itemIndex !== -1) {
-            items[itemIndex] = { ...items[itemIndex], caption, imageData };
-            newItem = items[itemIndex];
-          }
-        } else {
-          newItem = {
-            id: Date.now(),
+    function saveGalleryItem(caption, imageData, id = null) {
+      const items = getGalleryItems();
+      let newItem;
+      
+      if (id) {
+        const itemIndex = items.findIndex(item => item.id === id);
+        if (itemIndex !== -1) {
+          items[itemIndex] = {
+            ...items[itemIndex],
             caption,
-            imageData,
-            date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+            imageData: imageData || items[itemIndex].imageData,
+            date: items[itemIndex].date
           };
-          items.unshift(newItem);
+          newItem = items[itemIndex];
         }
-        
-        localStorage.setItem('galleryItems', JSON.stringify(items));
-        return newItem;
+      } else {
+        newItem = {
+          id: Date.now(),
+          caption,
+          imageData,
+          date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        };
+        items.unshift(newItem);
       }
+      
+      localStorage.setItem('galleryItems', JSON.stringify(items));
+      return newItem;
     }
 
-    async function deleteGalleryItem(id) {
-      try {
-        const response = await fetch(`../api/gallery.php?id=${id}`, {
-          method: 'DELETE'
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to delete gallery item');
-        }
-        
-        return await response.json();
-      } catch (error) {
-        console.error('Error deleting gallery item:', error);
-        // Fallback to localStorage
-        const items = JSON.parse(localStorage.getItem('galleryItems') || '[]');
-        const updatedItems = items.filter(item => item.id !== id);
-        localStorage.setItem('galleryItems', JSON.stringify(updatedItems));
-      }
+    function deleteGalleryItem(id) {
+      const items = getGalleryItems();
+      const updatedItems = items.filter(item => item.id !== id);
+      localStorage.setItem('galleryItems', JSON.stringify(updatedItems));
     }
 
     // Admin functionality
@@ -479,20 +441,15 @@
       imageInput.value = '';
     }
 
-    form.addEventListener('submit', async e => {
+    form.addEventListener('submit', e => {
       e.preventDefault();
       const caption = document.getElementById('imageCaption').value.trim();
       if (!caption) return alert('Please add a caption.');
       if (!editingItemId && !selectedImageData) return alert('Please select an image.');
       
-      try {
-        await saveGalleryItem(caption, selectedImageData, editingItemId);
-        resetForm();
-        await renderGallery();
-        alert('Gallery item saved successfully!');
-      } catch (error) {
-        alert('Error saving gallery item. Please try again.');
-      }
+      saveGalleryItem(caption, selectedImageData, editingItemId);
+      resetForm();
+      renderGallery();
     });
 
     function editGalleryItem(id) {
@@ -531,8 +488,8 @@
       editModeIndicator.style.display = 'none';
     }
 
-    async function renderGallery() {
-      const items = await getGalleryItems();
+    function renderGallery() {
+      const items = getGalleryItems();
       galleryContainer.innerHTML = '';
       if (!items || items.length === 0) {
         galleryContainer.innerHTML = `
@@ -555,16 +512,11 @@
         galleryContainer.appendChild(node);
       });
       galleryContainer.querySelectorAll('button[data-id]').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', () => {
           const id = Number(btn.getAttribute('data-id'));
           if (confirm('Delete this image?')) {
-            try {
-              await deleteGalleryItem(id);
-              await renderGallery();
-              alert('Gallery item deleted successfully!');
-            } catch (error) {
-              alert('Error deleting gallery item. Please try again.');
-            }
+            deleteGalleryItem(id);
+            renderGallery();
           }
         });
       });
@@ -583,9 +535,9 @@
       window.location.href = 'login.html';
     }
 
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
       requireAuth();
-      await renderGallery();
+      renderGallery();
     });
   </script>
 </body>
