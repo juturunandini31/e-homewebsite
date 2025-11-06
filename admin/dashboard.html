@@ -27,18 +27,28 @@
       <div class="card">
         <h3>Blog</h3>
         <p>Manage blog posts. Add or remove posts for the site.</p>
-        <a class="btn btn-primary" href="blogadmin.html">Open Blog Admin</a>
+        <a class="btn btn-primary" href="blogadmin-api.html">Open Blog Admin</a>
       </div>
       <div class="card">
         <h3>Gallery</h3>
         <p>Manage gallery images that appear on the site.</p>
-        <a class="btn btn-primary" href="gallery.html">Open Gallery Admin</a>
+        <a class="btn btn-primary" href="gallery-api.html">Open Gallery Admin</a>
       </div>
     </div>
     <hr>
     <p style="font-size:13px;color:#666">Note: This admin is a simple client-side demo. For production, use server-side authentication and storage.</p>
   </div>
 
-  <script src="./admin.js"></script>
+  <script src="./api-client.js"></script>
+  <script>
+    // Update dashboard to use new auth system
+    document.addEventListener('DOMContentLoaded', function() {
+      AdminAPI.requireAuth();
+      
+      // Update welcome message with username
+      const username = sessionStorage.getItem('adminUser') || 'admin';
+      document.querySelector('.dash strong').textContent = username;
+    });
+  </script>
 </body>
 </html>

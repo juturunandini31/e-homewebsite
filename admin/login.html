@@ -169,10 +169,10 @@
     <p class="footer-text">Only authorized users can access the dashboard.</p>
   </div>
 
-  <script src="./admin.js"></script>
+  <script src="./api-client.js"></script>
   <script>
     // Redirect if already logged in
-    if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+    if (sessionStorage.getItem('adminAuth') === 'true') {
       location.href = 'dashboard.html';
     }
 
@@ -183,7 +183,7 @@
       e.preventDefault();
       const u = document.getElementById('userid').value.trim();
       const p = document.getElementById('password').value;
-      const ok = login(u, p);
+      const ok = AdminAPI.login(u, p);
 
       if (ok) {
         location.href = 'dashboard.html';

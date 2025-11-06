@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - Gallery Management</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="admin.css">
+  <style>
+    .wrap { max-width: 1200px; margin: 36px auto; background: #fff; padding: 24px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 24px; }
+    .gallery-item { border: 1px solid #f0f0f0; border-radius: 8px; overflow: hidden; background: #fff; transition: transform 0.3s, box-shadow 0.3s; }
+    .gallery-item:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .gallery-img { width: 100%; height: 200px; object-fit: cover; display: block; }
+    .gallery-caption { padding: 12px; font-size: 14px; color: #555; text-align: center; font-weight: 600; }
+    .gallery-actions { padding: 12px; display: flex; justify-content: center; gap: 8px; border-top: 1px solid #f0f0f0; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #2c3e50; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+    .form-control:focus { border-color: #3498db; outline: none; box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
+    .image-upload-container { border: 2px dashed #ddd; border-radius: 6px; padding: 20px; text-align: center; margin-bottom: 16px; transition: border-color 0.3s; cursor: pointer; }
+    .image-upload-container:hover { border-color: #3498db; }
+    .image-upload-container.dragover { border-color: #2ecc71; background-color: #f9f9f9; }
+    .image-preview { max-width: 100%; max-height: 200px; height: auto; margin-top: 8px; border-radius: 4px; display: none; border: 1px solid #eee; }
+    .file-input { display: none; }
+    .loading { display: none; text-align: center; padding: 20px; color: #3498db; }
+    .no-items { text-align: center; padding: 40px; color: #7f8c8d; }
+    .btn { display: inline-block; padding: 8px 16px; border-radius: 4px; border: none; cursor: pointer; text-decoration: none; font-size: 14px; transition: all 0.3s; }
+    .btn-primary { background: #3498db; color: white; }
+    .btn-primary:hover { background: #2980b9; }
+    .btn-warning { background: #f39c12; color: white; }
+    .btn-warning:hover { background: #e67e22; }
+    .btn-danger { background: #e74c3c; color: white; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-info { background: #17a2b8; color: white; }
+    .btn-info:hover { background: #138496; }
+    .btn-secondary { background: #95a5a6; color: white; }
+    .btn-secondary:hover { background: #7f8c8d; }
+    .btn-light { background: #ecf0f1; color: #2c3e50; border: 1px solid #ddd; }
+    .btn-light:hover { background: #d5dbdb; }
+    .notification { position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; font-weight: 500; animation: slideIn 0.3s ease-out; }
+    .notification-success { background: #2ecc71; color: white; }
+    .notification-error { background: #e74c3c; color: white; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .edit-form { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e9ecef; }
+    .form-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .error-message { color: #e74c3c; font-size: 14px; margin-top: 5px; }
+    .success-message { color: #2ecc71; font-size: 14px; margin-top: 5px; }
+    .upload-icon { font-size: 48px; color: #95a5a6; margin-bottom: 10px; }
+    .upload-text { margin-bottom: 15px; color: #7f8c8d; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h2>Gallery Management</h2>
+      <div>
+        <a href="dashboard.html" class="btn btn-light">Dashboard</a>
+        <button onclick="AdminAPI.logout()" class="btn btn-secondary">Logout</button>
+      </div>
+    </div>
+
+    <div class="edit-form" id="editForm">
+      <h3 id="formTitle">Add New Gallery Item</h3>
+      <form id="galleryForm">
+        <div class="form-group">
+          <label for="imageCaption">Caption *</label>
+          <input type="text" id="imageCaption" class="form-control" placeholder="Enter image title or caption" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Gallery Image *</label>
+          <div class="image-upload-container" id="uploadContainer">
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">Click or drag image here</div>
+            <input type="file" id="imageInput" class="file-input" accept="image/*">
+            <button type="button" id="selectImageBtn" class="btn btn-secondary">Select Image</button>
+          </div>
+          <img id="imagePreview" class="image-preview" alt="Preview">
+          <div class="image-actions" id="imageActions" style="display:none;">
+            <button type="button" id="changeImageBtn" class="btn btn-secondary">Change Image</button>
+            <button type="button" id="removeImageBtn" class="btn btn-danger">Remove Image</button>
+          </div>
+          <div id="imageLoading" class="loading">Processing image...</div>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" id="submitButton" class="btn btn-primary">Add Image</button>
+          <button type="button" id="cancelEditButton" class="btn btn-light" style="display:none;">Cancel Edit</button>
+        </div>
+        <div id="formMessage"></div>
+      </form>
+    </div>
+
+    <div class="gallery-grid" id="galleryContainer">
+      <div class="loading">Loading gallery items...</div>
+    </div>
+  </div>
+
+  <script src="./api-client.js"></script>
+  <script>
+    // Initialize
+    let editingItemId = null;
+    let selectedImageData = '';
+
+    // DOM Elements
+    const galleryForm = document.getElementById('galleryForm');
+    const galleryContainer = document.getElementById('galleryContainer');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const uploadContainer = document.getElementById('uploadContainer');
+    const selectImageBtn = document.getElementById('selectImageBtn');
+    const changeImageBtn = document.getElementById('changeImageBtn');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const imageLoading = document.getElementById('imageLoading');
+    const imageActions = document.getElementById('imageActions');
+    const submitButton = document.getElementById('submitButton');
+    const cancelEditButton = document.getElementById('cancelEditButton');
+    const formTitle = document.getElementById('formTitle');
+    const formMessage = document.getElementById('formMessage');
+
+    // Authentication check
+    if (!AdminAPI.requireAuth()) {
+      window.location.href = 'login.html';
+    }
+
+    // Event Listeners
+    selectImageBtn.addEventListener('click', () => imageInput.click());
+    changeImageBtn.addEventListener('click', () => imageInput.click());
+    uploadContainer.addEventListener('click', (e) => {
+      if (e.target.id === 'selectImageBtn' || e.target.id === 'changeImageBtn') return;
+      imageInput.click();
+    });
+
+    imageInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) processImage(file);
+    });
+
+    // Drag and drop
+    uploadContainer.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      uploadContainer.classList.add('dragover');
+    });
+
+    uploadContainer.addEventListener('dragleave', function() {
+      uploadContainer.classList.remove('dragover');
+    });
+
+    uploadContainer.addEventListener('drop', function(e) {
+      e.preventDefault();
+      uploadContainer.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        processImage(file);
+      } else {
+        AdminAPI.showNotification('Please drop a valid image file.', 'error');
+      }
+    });
+
+    // Form submission
+    galleryForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const caption = document.getElementById('imageCaption').value.trim();
+
+      if (!caption || !selectedImageData) {
+        showFormMessage('Caption and image are required.', 'error');
+        return;
+      }
+
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = editingItemId ? 'Updating...' : 'Adding...';
+
+        if (editingItemId) {
+          await AdminAPI.saveGalleryItem(caption, selectedImageData, editingItemId);
+          AdminAPI.showNotification('Gallery item updated successfully!', 'success');
+          resetForm();
+        } else {
+          await AdminAPI.saveGalleryItem(caption, selectedImageData);
+          AdminAPI.showNotification('Gallery item added successfully!', 'success');
+          resetForm();
+        }
+
+        await loadGallery();
+      } catch (error) {
+        AdminAPI.showNotification('Failed to save gallery item. Please try again.', 'error');
+        console.error('Save error:', error);
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = editingItemId ? 'Update Image' : 'Add Image';
+      }
+    });
+
+    cancelEditButton.addEventListener('click', resetForm);
+    removeImageBtn.addEventListener('click', removeImage);
+
+    // Image processing
+    function processImage(file) {
+      if (!file.type.match('image.*')) {
+        AdminAPI.showNotification('Please select a valid image file.', 'error');
+        return;
+      }
+
+      imageLoading.style.display = 'block';
+      
+      AdminAPI.handleImageUpload(file, function(imageData) {
+        if (imageData) {
+          // Resize image for web
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const maxWidth = 800;
+            const maxHeight = 600;
+            
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth || height > maxHeight) {
+              if (width > height) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              } else {
+                width = Math.round((width * maxHeight) / height);
+                height = maxHeight;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            selectedImageData = canvas.toDataURL('image/jpeg', 0.8);
+            imagePreview.src = selectedImageData;
+            imagePreview.style.display = 'block';
+            imageActions.style.display = 'flex';
+            imageLoading.style.display = 'none';
+          };
+          img.src = imageData;
+        } else {
+          imageLoading.style.display = 'none';
+          AdminAPI.showNotification('Error processing image.', 'error');
+        }
+      });
+    }
+
+    function removeImage() {
+      selectedImageData = '';
+      imagePreview.style.display = 'none';
+      imageActions.style.display = 'none';
+      imageInput.value = '';
+    }
+
+    // Gallery management
+    async function loadGallery() {
+      try {
+        const items = await AdminAPI.getGalleryItems();
+        renderGallery(items);
+      } catch (error) {
+        AdminAPI.showNotification('Failed to load gallery items.', 'error');
+        galleryContainer.innerHTML = '<div class="no-items">Failed to load gallery. Please refresh the page.</div>';
+      }
+    }
+
+    function renderGallery(items) {
+      galleryContainer.innerHTML = '';
+      
+      if (!items || items.length === 0) {
+        galleryContainer.innerHTML = '<div class="no-items">No gallery items yet. Add your first image above!</div>';
+        return;
+      }
+
+      items.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'gallery-item';
+        
+        itemEl.innerHTML = `
+          <img src="${item.imageData}" alt="${escapeHtml(item.caption)}" class="gallery-img">
+          <div class="gallery-caption">${escapeHtml(item.caption)}</div>
+          <div class="gallery-actions">
+            <button class="btn btn-info" onclick="editItem('${item.id}', '${escapeHtml(item.caption)}')">Edit</button>
+            <button class="btn btn-danger" onclick="deleteItem('${item.id}')">Delete</button>
+          </div>
+        `;
+        
+        galleryContainer.appendChild(itemEl);
+      });
+    }
+
+    async function editItem(id, currentCaption) {
+      try {
+        const items = await AdminAPI.getGalleryItems();
+        const item = items.find(i => i.id === id);
+        
+        if (item) {
+          document.getElementById('imageCaption').value = item.caption;
+          
+          if (item.imageData) {
+            selectedImageData = item.imageData;
+            imagePreview.src = item.imageData;
+            imagePreview.style.display = 'block';
+            imageActions.style.display = 'flex';
+          } else {
+            removeImage();
+          }
+          
+          editingItemId = id;
+          formTitle.textContent = 'Edit Gallery Item';
+          submitButton.textContent = 'Update Image';
+          submitButton.className = 'btn btn-warning';
+          cancelEditButton.style.display = 'inline-block';
+          
+          // Scroll to form
+          document.getElementById('editForm').scrollIntoView({ behavior: 'smooth' });
+          
+          showFormMessage('Editing gallery item. Make your changes and click Update Image.', 'info');
+        }
+      } catch (error) {
+        AdminAPI.showNotification('Failed to load item for editing.', 'error');
+      }
+    }
+
+    async function deleteItem(id) {
+      if (confirm('Are you sure you want to delete this gallery item? This action cannot be undone.')) {
+        try {
+          await AdminAPI.deleteGalleryItem(id);
+          AdminAPI.showNotification('Gallery item deleted successfully!', 'success');
+          await loadGallery();
+        } catch (error) {
+          AdminAPI.showNotification('Failed to delete gallery item.', 'error');
+        }
+      }
+    }
+
+    function resetForm() {
+      galleryForm.reset();
+      removeImage();
+      editingItemId = null;
+      formTitle.textContent = 'Add New Gallery Item';
+      submitButton.textContent = 'Add Image';
+      submitButton.className = 'btn btn-primary';
+      cancelEditButton.style.display = 'none';
+      formMessage.innerHTML = '';
+    }
+
+    function showFormMessage(message, type) {
+      formMessage.innerHTML = `<div class="${type === 'error' ? 'error-message' : 'success-message'}">${message}</div>`;
+      setTimeout(() => {
+        formMessage.innerHTML = '';
+      }, 5000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      loadGallery();
+    });
+  </script>
+</body>
+</html>

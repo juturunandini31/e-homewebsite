@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - Blog Management</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="admin.css">
+  <style>
+    .wrap { max-width: 1200px; margin: 36px auto; background: #fff; padding: 24px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
+    .posts { margin-top: 24px; }
+    .post { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; border: 1px solid #f1f5f9; transition: box-shadow 0.3s; }
+    .post:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .post h4 { margin: 0 0 8px 0; color: #2c3e50; }
+    .post img { max-width: 200px; height: auto; border-radius: 4px; margin: 8px 0; }
+    .post-content { white-space: pre-wrap; color: #555; margin: 12px 0; }
+    .post-meta { color: #7f8c8d; font-size: 14px; margin-bottom: 12px; }
+    .post-actions { display: flex; gap: 8px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #2c3e50; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+    .form-control:focus { border-color: #3498db; outline: none; box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
+    textarea.form-control { resize: vertical; min-height: 120px; }
+    .image-upload-container { border: 2px dashed #ddd; border-radius: 6px; padding: 20px; text-align: center; margin-bottom: 16px; transition: border-color 0.3s; cursor: pointer; }
+    .image-upload-container:hover { border-color: #3498db; }
+    .image-upload-container.dragover { border-color: #2ecc71; background-color: #f9f9f9; }
+    .image-preview { max-width: 100%; max-height: 200px; height: auto; margin-top: 8px; border-radius: 4px; display: none; border: 1px solid #eee; }
+    .file-input { display: none; }
+    .loading { display: none; text-align: center; padding: 20px; color: #3498db; }
+    .no-posts { text-align: center; padding: 40px; color: #7f8c8d; }
+    .btn { display: inline-block; padding: 8px 16px; border-radius: 4px; border: none; cursor: pointer; text-decoration: none; font-size: 14px; transition: all 0.3s; }
+    .btn-primary { background: #3498db; color: white; }
+    .btn-primary:hover { background: #2980b9; }
+    .btn-warning { background: #f39c12; color: white; }
+    .btn-warning:hover { background: #e67e22; }
+    .btn-danger { background: #e74c3c; color: white; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-info { background: #17a2b8; color: white; }
+    .btn-info:hover { background: #138496; }
+    .btn-secondary { background: #95a5a6; color: white; }
+    .btn-secondary:hover { background: #7f8c8d; }
+    .btn-light { background: #ecf0f1; color: #2c3e50; border: 1px solid #ddd; }
+    .btn-light:hover { background: #d5dbdb; }
+    .notification { position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; font-weight: 500; animation: slideIn 0.3s ease-out; }
+    .notification-success { background: #2ecc71; color: white; }
+    .notification-error { background: #e74c3c; color: white; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .edit-form { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e9ecef; }
+    .form-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .error-message { color: #e74c3c; font-size: 14px; margin-top: 5px; }
+    .success-message { color: #2ecc71; font-size: 14px; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h2>Blog Management</h2>
+      <div>
+        <a href="dashboard.html" class="btn btn-light">Dashboard</a>
+        <button onclick="AdminAPI.logout()" class="btn btn-secondary">Logout</button>
+      </div>
+    </div>
+
+    <div class="edit-form" id="editForm">
+      <h3 id="formTitle">Add New Blog Post</h3>
+      <form id="postForm">
+        <div class="form-group">
+          <label for="postTitle">Title *</label>
+          <input type="text" id="postTitle" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="postDescription">Description</label>
+          <input type="text" id="postDescription" class="form-control" placeholder="Brief description of the post">
+        </div>
+        
+        <div class="form-group">
+          <label for="postAuthor">Author</label>
+          <input type="text" id="postAuthor" class="form-control" value="Admin">
+        </div>
+        
+        <div class="form-group">
+          <label>Featured Image</label>
+          <div class="image-upload-container" id="uploadContainer">
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">Click or drag image here</div>
+            <input type="file" id="imageInput" class="file-input" accept="image/*">
+            <button type="button" id="selectImageBtn" class="btn btn-secondary">Select Image</button>
+          </div>
+          <img id="imagePreview" class="image-preview" alt="Preview">
+          <div class="image-actions" id="imageActions" style="display:none;">
+            <button type="button" id="changeImageBtn" class="btn btn-secondary">Change Image</button>
+            <button type="button" id="removeImageBtn" class="btn btn-danger">Remove Image</button>
+          </div>
+          <div id="imageLoading" class="loading">Processing image...</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="postContent">Content *</label>
+          <textarea id="postContent" class="form-control" rows="8" required placeholder="Write your blog post content here..."></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" id="submitButton" class="btn btn-primary">Add Post</button>
+          <button type="button" id="cancelEditButton" class="btn btn-light" style="display:none;">Cancel Edit</button>
+        </div>
+        <div id="formMessage"></div>
+      </form>
+    </div>
+
+    <div class="posts" id="posts">
+      <div class="loading">Loading blog posts...</div>
+    </div>
+  </div>
+
+  <script src="./api-client.js"></script>
+  <script>
+    // Initialize
+    let editingPostId = null;
+    let selectedImageData = '';
+
+    // DOM Elements
+    const postForm = document.getElementById('postForm');
+    const postsContainer = document.getElementById('posts');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const uploadContainer = document.getElementById('uploadContainer');
+    const selectImageBtn = document.getElementById('selectImageBtn');
+    const changeImageBtn = document.getElementById('changeImageBtn');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const imageLoading = document.getElementById('imageLoading');
+    const imageActions = document.getElementById('imageActions');
+    const submitButton = document.getElementById('submitButton');
+    const cancelEditButton = document.getElementById('cancelEditButton');
+    const formTitle = document.getElementById('formTitle');
+    const formMessage = document.getElementById('formMessage');
+
+    // Authentication check
+    if (!AdminAPI.requireAuth()) {
+      window.location.href = 'login.html';
+    }
+
+    // Event Listeners
+    selectImageBtn.addEventListener('click', () => imageInput.click());
+    changeImageBtn.addEventListener('click', () => imageInput.click());
+    uploadContainer.addEventListener('click', (e) => {
+      if (e.target.id === 'selectImageBtn' || e.target.id === 'changeImageBtn') return;
+      imageInput.click();
+    });
+
+    imageInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) processImage(file);
+    });
+
+    // Drag and drop
+    uploadContainer.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      uploadContainer.classList.add('dragover');
+    });
+
+    uploadContainer.addEventListener('dragleave', function() {
+      uploadContainer.classList.remove('dragover');
+    });
+
+    uploadContainer.addEventListener('drop', function(e) {
+      e.preventDefault();
+      uploadContainer.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        processImage(file);
+      } else {
+        AdminAPI.showNotification('Please drop a valid image file.', 'error');
+      }
+    });
+
+    // Form submission
+    postForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const title = document.getElementById('postTitle').value.trim();
+      const content = document.getElementById('postContent').value.trim();
+      const author = document.getElementById('postAuthor').value.trim() || 'Admin';
+      const description = document.getElementById('postDescription').value.trim();
+
+      if (!title || !content) {
+        showFormMessage('Title and content are required.', 'error');
+        return;
+      }
+
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = editingPostId ? 'Updating...' : 'Adding...';
+
+        if (editingPostId) {
+          await AdminAPI.saveBlogPost(title, content, selectedImageData, author, description, null, editingPostId);
+          AdminAPI.showNotification('Blog post updated successfully!', 'success');
+          resetForm();
+        } else {
+          await AdminAPI.saveBlogPost(title, content, selectedImageData, author, description);
+          AdminAPI.showNotification('Blog post added successfully!', 'success');
+          resetForm();
+        }
+
+        await loadPosts();
+      } catch (error) {
+        AdminAPI.showNotification('Failed to save blog post. Please try again.', 'error');
+        console.error('Save error:', error);
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = editingPostId ? 'Update Post' : 'Add Post';
+      }
+    });
+
+    cancelEditButton.addEventListener('click', resetForm);
+    removeImageBtn.addEventListener('click', removeImage);
+
+    // Image processing
+    function processImage(file) {
+      if (!file.type.match('image.*')) {
+        AdminAPI.showNotification('Please select a valid image file.', 'error');
+        return;
+      }
+
+      imageLoading.style.display = 'block';
+      
+      AdminAPI.handleImageUpload(file, function(imageData) {
+        if (imageData) {
+          // Resize image for web
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const maxWidth = 800;
+            const maxHeight = 600;
+            
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth || height > maxHeight) {
+              if (width > height) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              } else {
+                width = Math.round((width * maxHeight) / height);
+                height = maxHeight;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            selectedImageData = canvas.toDataURL('image/jpeg', 0.8);
+            imagePreview.src = selectedImageData;
+            imagePreview.style.display = 'block';
+            imageActions.style.display = 'flex';
+            imageLoading.style.display = 'none';
+          };
+          img.src = imageData;
+        } else {
+          imageLoading.style.display = 'none';
+          AdminAPI.showNotification('Error processing image.', 'error');
+        }
+      });
+    }
+
+    function removeImage() {
+      selectedImageData = '';
+      imagePreview.style.display = 'none';
+      imageActions.style.display = 'none';
+      imageInput.value = '';
+    }
+
+    // Post management
+    async function loadPosts() {
+      try {
+        const posts = await AdminAPI.getBlogPosts();
+        renderPosts(posts);
+      } catch (error) {
+        AdminAPI.showNotification('Failed to load blog posts.', 'error');
+        postsContainer.innerHTML = '<div class="no-posts">Failed to load posts. Please refresh the page.</div>';
+      }
+    }
+
+    function renderPosts(posts) {
+      postsContainer.innerHTML = '';
+      
+      if (!posts || posts.length === 0) {
+        postsContainer.innerHTML = '<div class="no-posts">No blog posts yet. Add your first post above!</div>';
+        return;
+      }
+
+      posts.forEach(post => {
+        const postEl = document.createElement('div');
+        postEl.className = 'post';
+        
+        const postDate = AdminAPI.formatDate(post.createdAt || post.date);
+        
+        postEl.innerHTML = `
+          <h4>${escapeHtml(post.title)}</h4>
+          <div class="post-meta">
+            <strong>By:</strong> ${escapeHtml(post.author || 'Admin')} | 
+            <strong>Posted:</strong> ${postDate}
+            ${post.description ? `<br><strong>Description:</strong> ${escapeHtml(post.description)}` : ''}
+          </div>
+          ${post.imageData ? `<img src="${post.imageData}" alt="${escapeHtml(post.title)}">` : ''}
+          <div class="post-content">${escapeHtml(post.content)}</div>
+          <div class="post-actions">
+            <button class="btn btn-info" onclick="editPost(${post.id})">Edit</button>
+            <button class="btn btn-danger" onclick="deletePost(${post.id})">Delete</button>
+          </div>
+        `;
+        
+        postsContainer.appendChild(postEl);
+      });
+    }
+
+    async function editPost(id) {
+      try {
+        const post = await AdminAPI.getBlogPost(id);
+        if (post) {
+          document.getElementById('postTitle').value = post.title;
+          document.getElementById('postContent').value = post.content;
+          document.getElementById('postAuthor').value = post.author || 'Admin';
+          document.getElementById('postDescription').value = post.description || '';
+          
+          if (post.imageData) {
+            selectedImageData = post.imageData;
+            imagePreview.src = post.imageData;
+            imagePreview.style.display = 'block';
+            imageActions.style.display = 'flex';
+          } else {
+            removeImage();
+          }
+          
+          editingPostId = id;
+          formTitle.textContent = 'Edit Blog Post';
+          submitButton.textContent = 'Update Post';
+          submitButton.className = 'btn btn-warning';
+          cancelEditButton.style.display = 'inline-block';
+          
+          // Scroll to form
+          document.getElementById('editForm').scrollIntoView({ behavior: 'smooth' });
+          
+          showFormMessage('Editing post. Make your changes and click Update Post.', 'info');
+        }
+      } catch (error) {
+        AdminAPI.showNotification('Failed to load post for editing.', 'error');
+      }
+    }
+
+    async function deletePost(id) {
+      if (confirm('Are you sure you want to delete this blog post? This action cannot be undone.')) {
+        try {
+          await AdminAPI.deleteBlogPost(id);
+          AdminAPI.showNotification('Blog post deleted successfully!', 'success');
+          await loadPosts();
+        } catch (error) {
+          AdminAPI.showNotification('Failed to delete blog post.', 'error');
+        }
+      }
+    }
+
+    function resetForm() {
+      postForm.reset();
+      removeImage();
+      editingPostId = null;
+      formTitle.textContent = 'Add New Blog Post';
+      submitButton.textContent = 'Add Post';
+      submitButton.className = 'btn btn-primary';
+      cancelEditButton.style.display = 'none';
+      formMessage.innerHTML = '';
+      document.getElementById('postAuthor').value = 'Admin';
+    }
+
+    function showFormMessage(message, type) {
+      formMessage.innerHTML = `<div class="${type === 'error' ? 'error-message' : 'success-message'}">${message}</div>`;
+      setTimeout(() => {
+        formMessage.innerHTML = '';
+      }, 5000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      loadPosts();
+    });
+  </script>
+</body>
+</html>
