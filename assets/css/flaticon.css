@@ -1,0 +1,79 @@
+	/*
+  	Flaticon icon font: Flaticon
+  	Creation date: 25/02/2021 17:58
+  	*/
+
+@font-face {
+  font-family: "Flaticon";
+  src: url("../fonts/Flaticon.eot");
+  src: url("../fonts/Flaticon.eot?#iefix") format("embedded-opentype"),
+       url("../fonts/Flaticon.woff2") format("woff2"),
+       url("../fonts/Flaticon.woff") format("woff"),
+       url("../fonts/Flaticon.ttf") format("truetype"),
+       url("../fonts/Flaticon.svg#Flaticon") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: "Flaticon";
+    src: url("../fonts/Flaticon.svg#Flaticon") format("svg");
+  }
+}
+
+[class^="flaticon-"]:before, [class*=" flaticon-"]:before,
+[class^="flaticon-"]:after, [class*=" flaticon-"]:after {   
+  font-family: Flaticon;
+  font-style: normal;
+
+}
+/* === Existing Icons === */
+.flaticon-medal:before { content: "\f100"; }
+.flaticon-credit-card:before { content: "\f101"; }
+.flaticon-icon-1584892:before { content: "\f102"; }
+.flaticon-spray:before { content: "\f103"; }
+.flaticon-clean-house:before { content: "\f104"; }
+.flaticon-wiper:before { content: "\f105"; }
+.flaticon-tap:before { content: "\f106"; }
+.flaticon-planet-earth:before { content: "\f107"; }
+.flaticon-clean:before { content: "\f108"; }
+.flaticon-mop:before { content: "\f109"; }
+.flaticon-bucket:before { content: "\f10a"; }
+.flaticon-gloves:before { content: "\f10b"; }
+.flaticon-vacuum-cleaner:before { content: "\f10c"; }
+.flaticon-window:before { content: "\f10d"; }
+.flaticon-broom:before { content: "\f10e"; }
+.flaticon-duster:before { content: "\f10f"; }
+.flaticon-laundry:before { content: "\f110"; }
+.flaticon-garbage:before { content: "\f111"; }
+.flaticon-sanitizer:before { content: "\f112"; }
+
+/* === New Additions === */
+.flaticon-hand-wash:before { content: "\f113"; }         /* Hand hygiene / safety */
+.flaticon-disinfectant:before { content: "\f114"; }      /* Disinfection chemical spray */
+.flaticon-housekeeping-cart:before { content: "\f115"; } /* Hotel / housekeeping service */
+.flaticon-pest-control:before { content: "\f116"; }      /* Pest / termite control */
+.flaticon-garden:before { content: "\f117"; }            /* Garden & outdoor cleaning */
+.flaticon-light-bulb:before { content: "\f118"; }        /* Maintenance / electrical */
+.flaticon-toolbox:before { content: "\f119"; }           /* Repair & maintenance services */
+.flaticon-building:before { content: "\f11a"; }          /* Office Cleaning */
+.flaticon-hospital:before { content: "\f11b"; }          /* Hospital / clinical cleaning */
+.flaticon-school:before { content: "\f11c"; }            /* School / institutional cleaning */
+.flaticon-water-drop:before { content: "\f11d"; }        /* Water purification / freshness */
+.flaticon-bed:before { content: "\f11e"; }               /* Bedroom / mattress cleaning */
+.flaticon-couch:before { content: "\f11f"; }             /* Sofa & Carpet Cleaning */
+.flaticon-shower:before { content: "\f120"; }            /* Bathroom / sanitary cleaning */
+.flaticon-brush:before { content: "\f121"; }             /* Scrubbing / detailing */
+.flaticon-dish:before { content: "\f122"; }              /* Kitchen utensils cleaning */
+.flaticon-towel:before { content: "\f123"; }             /* Linen / hotel towel service */
+.flaticon-air-freshener:before { content: "\f124"; }     /* Fragrance / air care */
+.flaticon-hazard:before { content: "\f125"; }            /* Biohazard / medical waste */
+.flaticon-recycle:before { content: "\f126"; }           /* Waste segregation / eco cleaning */
+.flaticon-eco-leaf:before { content: "\f127"; }          /* Green / eco-friendly cleaning */
+.flaticon-certificate:before { content: "\f128"; }       /* Certified cleaning professionals */
+
+/* === Additional Icons for Services Section === */
+.flaticon-apartment:before { content: "\f129"; }         /* Apartment Cleaning */
+.flaticon-villa:before { content: "\f12a"; }             /* Villa Deep Cleaning */
+.flaticon-residential:before { content: "\f12b"; }       /* Residential Cleaning */

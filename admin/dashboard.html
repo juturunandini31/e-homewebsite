@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="admin.css">
+  <style>
+    .dash{max-width:980px;margin:48px auto;padding:18px;background:#fff;border-radius:8px}
+    .dash h1{margin-bottom:8px}
+    .cards{display:flex;gap:12px}
+    .card{flex:1;padding:18px;border:1px solid #f0f0f0;border-radius:6px}
+  </style>
+</head>
+<body onload="requireAuth()">
+  <div class="dash">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h1>Admin Dashboard</h1>
+      <div>
+        <button class="btn btn-light" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <p>Welcome, <strong>admin</strong>. Use the links below to manage content.</p>
+    <div class="cards">
+      <div class="card">
+        <h3>Blog</h3>
+        <p>Manage blog posts. Add or remove posts for the site.</p>
+        <a class="btn btn-primary" href="blogadmin.html">Open Blog Admin</a>
+      </div>
+      <div class="card">
+        <h3>Gallery</h3>
+        <p>Manage gallery images that appear on the site.</p>
+        <a class="btn btn-primary" href="gallery.html">Open Gallery Admin</a>
+      </div>
+    </div>
+    <hr>
+    <p style="font-size:13px;color:#666">Note: This admin is a simple client-side demo. For production, use server-side authentication and storage.</p>
+  </div>
+
+  <script src="./admin.js"></script>
+</body>
+</html>
